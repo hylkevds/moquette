@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
 public class SessionRegistry {
 
     public abstract static class EnqueuedMessage implements Serializable {
+        public void release() {}
     }
 
     static class PublishedMessage extends EnqueuedMessage {
@@ -78,7 +79,15 @@ public class SessionRegistry {
             ois.read(byteArr);
             payload = Unpooled.wrappedBuffer(byteArr);
         }
-        
+
+        /**
+         * Releases the payload. Must be called when the PublishedMessage is no
+         * longer needed.
+         */
+        @Override
+        public void release() {
+            payload.release();
+        }
     }
 
     static final class PubRelMarker extends EnqueuedMessage {
