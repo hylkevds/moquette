@@ -38,11 +38,13 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import static io.netty.handler.codec.mqtt.MqttConnectReturnCode.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import static org.junit.jupiter.api.Assertions.*;
 
-public class ServerLowlevelMessagesIntegrationTests {
+public class ServerLowlevelMessagesIntegrationTest {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ServerLowlevelMessagesIntegrationTests.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ServerLowlevelMessagesIntegrationTest.class);
     static MqttClientPersistence s_dataStore;
     Server m_server;
     Client m_client;
@@ -171,4 +173,38 @@ public class ServerLowlevelMessagesIntegrationTests {
         m_willSubscriber.disconnect();
     }
 
+    @Test
+    public void testResendNotAckedPublishes() throws MqttException, InterruptedException {
+        LOG.info("*** testResendNotAckedPublishes ***");
+        String topic = "/test";
+
+        MqttClient subscriber = new MqttClient("tcp://localhost:1883", "Subscriber");
+        MqttClient publisher = new MqttClient("tcp://localhost:1883", "Publisher");
+
+        try {
+            subscriber.connect();
+            publisher.connect();
+
+            AtomicBoolean isFirst = new AtomicBoolean(true);
+            CountDownLatch countDownLatch = new CountDownLatch(2);
+            subscriber.subscribe(topic, 1, (String topic1, org.eclipse.paho.client.mqttv3.MqttMessage message) -> {
+                if (isFirst.getAndSet(false)) {
+                    // wait to trigger resending PUBLISH
+                    TimeUnit.SECONDS.sleep(12);
+                }
+                countDownLatch.countDown();
+            });
+
+            publisher.publish(topic, "hello".getBytes(), 1, false);
+            assertTrue(countDownLatch.await(30, TimeUnit.SECONDS));
+        }
+        finally {
+            try {
+                subscriber.disconnect();
+            }
+            finally {
+                publisher.disconnect();
+            }
+        }
+    }
 }
