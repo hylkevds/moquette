@@ -6,12 +6,15 @@
         <!--<netty.version>4.1.12.Final</netty.version>-->
         <source.version>1.8</source.version>
         <target.version>1.8</target.version>
-        <bintray.repo>andsel/maven</bintray.repo>
-        <bintray.parent.package>io.moquette.moquette-parent</bintray.parent.package>
         <junit.version>5.7.0</junit.version>
+
+        <maven-gpg-plugin>1.6</maven-gpg-plugin>
+        <maven-javadoc-plugin>3.2.0</maven-javadoc-plugin>
+        <maven-nexus-staging-plugin>1.6.8</maven-nexus-staging-plugin>
+        <maven-source-plugin>3.2.1</maven-source-plugin>
     </properties>
 
-    <groupId>io.moquette</groupId>
+    <groupId>de.fraunhofer.iosb.io.moquette</groupId>
     <artifactId>moquette-parent</artifactId>
 
     <packaging>pom</packaging>
@@ -56,6 +59,17 @@
         <module>distribution</module>
         <module>embedding_moquette</module>
     </modules>
+
+    <distributionManagement>
+        <snapshotRepository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+        </snapshotRepository>
+        <repository>
+            <id>ossrh</id>
+            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+        </repository>
+    </distributionManagement>
 
     <dependencies>
         <dependency>
@@ -170,6 +184,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
+                        <version>${maven-source-plugin}</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -183,6 +198,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
+                        <version>${maven-javadoc-plugin}</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -196,6 +212,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven-gpg-plugin}</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
@@ -206,35 +223,21 @@
                             </execution>
                         </executions>
                     </plugin>
+                    <plugin>
+                        <groupId>org.sonatype.plugins</groupId>
+                        <artifactId>nexus-staging-maven-plugin</artifactId>
+                        <version>${maven-nexus-staging-plugin}</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <serverId>ossrh</serverId>
+                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
+                            <autoReleaseAfterClose>false</autoReleaseAfterClose>
+                        </configuration>
+                    </plugin>
                 </plugins>
             </build>
         </profile>
     </profiles>
 
-    <repositories>
-        <repository>
-            <id>Maven repo</id>
-            <url>https://repo1.maven.org/maven2/</url>
-        </repository>
-
-        <repository>
-            <id>Paho Releases</id>
-            <url>https://repo.eclipse.org/content/repositories/paho-releases/</url>
-        </repository>
-
-        <repository>
-            <id>sonatype-snapshots</id>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </repository>
-    </repositories>
-
-    <distributionManagement>
-        <repository>
-            <id>bintray</id>
-            <url>https://api.bintray.com/maven/${bintray.repo}/${bintray.parent.package}</url>
-        </repository>
-    </distributionManagement>
 </project>
+
