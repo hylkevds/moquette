@@ -19,8 +19,8 @@
 
     <packaging>pom</packaging>
     <version>0.15-SNAPSHOT</version>
-    <name>Moquette MQTT</name>
-    <description>Moquette lightweight MQTT Broker</description>
+    <name>Moquette MQTT + patches</name>
+    <description>Moquette lightweight MQTT Broker, with added patches.</description>
     <inceptionYear>2011</inceptionYear>
     <url>http://moquette.io</url>
 
@@ -46,13 +46,22 @@
             </roles>
             <timezone>+1</timezone>
         </developer>
+        <developer>
+            <id>scf</id>
+            <name>Hylke van der Schaaf</name>
+            <roles>
+                <role>developer</role>
+            </roles>
+            <timezone>+1</timezone>
+        </developer>
     </developers>
 
     <scm>
-        <connection>scm:git:git@github.com:moquette-io/moquette.git</connection>
-        <developerConnection>scm:git:git@github.com:moquette-io/moquette.git</developerConnection>
-        <url>git@github.com:moquette-io/moquette.git</url>
-    </scm>
+        <connection>scm:git:git@github.com:FraunhoferIOSB/moquette.git</connection>
+        <developerConnection>scm:git:git@github.com:FraunhoferIOSB/moquette.git</developerConnection>
+        <url>git@github.com:FraunhoferIOSB/moquette.git</url>
+        <tag>HEAD</tag>
+  </scm>
 
     <modules>
         <module>broker</module>
