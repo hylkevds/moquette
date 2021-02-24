@@ -187,9 +187,9 @@ class Session {
         SessionRegistry.EnqueuedMessage removed = inflightWindow.remove(packetId);
         if (removed != null) {
             removed.release();
+            inflightSlots.incrementAndGet();
         }
 
-        inflightSlots.incrementAndGet();
         if (canSkipQueue()) {
             inflightSlots.decrementAndGet();
             int pubRelPacketId = packetId/*mqttConnection.nextPacketId()*/;
@@ -209,9 +209,8 @@ class Session {
         SessionRegistry.EnqueuedMessage removed = inflightWindow.remove(messageID);
         if (removed != null) {
             removed.release();
+            inflightSlots.incrementAndGet();
         }
-
-        inflightSlots.incrementAndGet();
 
         drainQueueToConnection();
 
@@ -309,9 +308,9 @@ class Session {
         SessionRegistry.EnqueuedMessage removed = inflightWindow.remove(ackPacketId);
         if (removed != null) {
             removed.release();
+            inflightSlots.incrementAndGet();
         }
 
-        inflightSlots.incrementAndGet();
         drainQueueToConnection();
     }
 
