@@ -187,9 +187,9 @@ class Session {
         SessionRegistry.EnqueuedMessage removed = inflightWindow.remove(packetId);
         if (removed != null) {
             removed.release();
+            inflightSlots.incrementAndGet();
         }
 
-        inflightSlots.incrementAndGet();
         if (canSkipQueue()) {
             inflightSlots.decrementAndGet();
             int pubRelPacketId = packetId/*mqttConnection.nextPacketId()*/;
@@ -209,9 +209,8 @@ class Session {
         SessionRegistry.EnqueuedMessage removed = inflightWindow.remove(messageID);
         if (removed != null) {
             removed.release();
+            inflightSlots.incrementAndGet();
         }
-
-        inflightSlots.incrementAndGet();
 
         drainQueueToConnection();
 
@@ -309,9 +308,9 @@ class Session {
         SessionRegistry.EnqueuedMessage removed = inflightWindow.remove(ackPacketId);
         if (removed != null) {
             removed.release();
+            inflightSlots.incrementAndGet();
         }
 
-        inflightSlots.incrementAndGet();
         drainQueueToConnection();
     }
 
@@ -369,13 +368,14 @@ class Session {
                 // Our message was already fetched by another Thread.
                 return;
             }
-            inflightSlots.decrementAndGet();
             int sendPacketId = mqttConnection.nextPacketId();
-            inflightWindow.put(sendPacketId, msg);
             if (msg instanceof SessionRegistry.PubRelMarker) {
                 MqttMessage pubRel = MQTTConnection.pubrel(sendPacketId);
                 mqttConnection.sendIfWritableElseDrop(pubRel);
             } else {
+                inflightSlots.decrementAndGet();
+                inflightWindow.put(sendPacketId, msg);
+                inflightTimeouts.add(new InFlightPacket(sendPacketId, FLIGHT_BEFORE_RESEND_MS));
                 final SessionRegistry.PublishedMessage msgPub = (SessionRegistry.PublishedMessage) msg;
                 // Second pass-on.
                 msgPub.payload.retain();
