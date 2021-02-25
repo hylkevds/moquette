@@ -360,14 +360,19 @@ class Session {
     private void drainQueueToConnection() {
         // consume the queue
         while (!sessionQueue.isEmpty() && inflighHasSlotsAndConnectionIsUp()) {
-            final SessionRegistry.EnqueuedMessage msg = sessionQueue.remove();
-            inflightSlots.decrementAndGet();
+            final SessionRegistry.EnqueuedMessage msg = sessionQueue.poll();
+            if (msg == null) {
+                // Our message was already fetched by another Thread.
+                return;
+            }
             int sendPacketId = mqttConnection.nextPacketId();
-            inflightWindow.put(sendPacketId, msg);
             if (msg instanceof SessionRegistry.PubRelMarker) {
                 MqttMessage pubRel = MQTTConnection.pubrel(sendPacketId);
                 mqttConnection.sendIfWritableElseDrop(pubRel);
             } else {
+                inflightSlots.decrementAndGet();
+                inflightWindow.put(sendPacketId, msg);
+                inflightTimeouts.add(new InFlightPacket(sendPacketId, FLIGHT_BEFORE_RESEND_MS));
                 final SessionRegistry.PublishedMessage msgPub = (SessionRegistry.PublishedMessage) msg;
                 // Second pass-on.
                 msgPub.payload.retain();
