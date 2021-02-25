@@ -1,3 +1,13 @@
+Version 0.14.2:
+   fixed #585: MessageId not limited to 65535
+   fixed #583: inflightSlots incremented too often
+
+Version 0.14.1:
+   Many improvements to the stability of the broker, fixing memory leaks.
+   fixed #571: ConcurrentModificationException in MemorySubscriptionsRepository
+   fixed #569: NoSuchElementException in Session.drainQueueToConnection
+   fixed #566: NotSerializableException: io.moquette.broker.SessionRegistry$PublishedMessage
+
 Version 0.12:
    Fixed issue #415
    Dropped Hazelcast because at the moment Moquette is not designed to be clusterizable
