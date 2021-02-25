@@ -4,7 +4,7 @@
         <relativePath>../pom.xml</relativePath>
         <artifactId>moquette-parent</artifactId>
         <groupId>de.fraunhofer.iosb.io.moquette</groupId>
-        <version>0.14.2</version>
+        <version>0.14.3-SNAPSHOT</version>
     </parent>
 
     <artifactId>moquette-broker</artifactId>
