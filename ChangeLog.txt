@@ -1,3 +1,7 @@
+Version 0.14.3:
+   fixed #455: ClassCastException in Session.resendInflightNotAcked
+   fixed #587: QOS 2 PubRel packets deadlocked in queue
+
 Version 0.14.2:
    fixed #585: MessageId not limited to 65535
    fixed #583: inflightSlots incremented too often
