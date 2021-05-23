@@ -111,6 +111,8 @@ class PostOffice {
 
                 final ByteBuf payloadBuf = Unpooled.wrappedBuffer(retainedMsg.getPayload());
                 targetSession.sendRetainedPublishOnSessionAtQos(retainedMsg.getTopic(), qos, payloadBuf);
+                // We made the buffer, we must release it.
+                payloadBuf.release();
             }
         }
     }
@@ -202,7 +204,7 @@ class PostOffice {
         interceptor.notifyTopicPublished(msg, clientId, username);
     }
 
-    private void publish2Subscribers(ByteBuf origPayload, Topic topic, MqttQoS publishingQos) {
+    private void publish2Subscribers(ByteBuf payload, Topic topic, MqttQoS publishingQos) {
         Set<Subscription> topicMatchingSubscriptions = subscriptions.matchQosSharpening(topic);
 
         for (final Subscription sub : topicMatchingSubscriptions) {
@@ -213,8 +215,6 @@ class PostOffice {
             if (isSessionPresent) {
                 LOG.debug("Sending PUBLISH message to active subscriber CId: {}, topicFilter: {}, qos: {}",
                           sub.getClientId(), sub.getTopicFilter(), qos);
-                // we need to retain because duplicate only copy r/w indexes and don't retain() causing refCnt = 0
-                ByteBuf payload = origPayload.retainedDuplicate();
                 targetSession.sendPublishOnSessionAtQos(topic, qos, payload);
             } else {
                 // If we are, the subscriber disconnected after the subscriptions tree selected that session as a
@@ -237,8 +237,6 @@ class PostOffice {
         final String clientId = connection.getClientId();
         if (!authorizator.canWrite(topic, username, clientId)) {
             LOG.error("MQTT client is not authorized to publish on topic: {}", topic);
-            // msg not passed on, release payload.
-            payload.release();
             return;
         }
 
@@ -256,8 +254,6 @@ class PostOffice {
 
         String clientID = connection.getClientId();
         interceptor.notifyTopicPublished(mqttPublishMessage, clientID, username);
-        // none of the methods above released the payload, do it now.
-        payload.release();
     }
 
     static MqttQoS lowerQosToTheSubscriptionDesired(Subscription sub, MqttQoS qos) {

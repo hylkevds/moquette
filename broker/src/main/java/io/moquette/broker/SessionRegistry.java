@@ -43,6 +43,7 @@ public class SessionRegistry {
 
     public abstract static class EnqueuedMessage implements Serializable {
         public void release() {}
+        public void retain() {}
     }
 
     static class PublishedMessage extends EnqueuedMessage {
@@ -88,6 +89,12 @@ public class SessionRegistry {
         public void release() {
             payload.release();
         }
+
+        @Override
+        public void retain() {
+            payload.retain();
+        }
+
     }
 
     static final class PubRelMarker extends EnqueuedMessage {

@@ -38,6 +38,7 @@ import static io.netty.channel.ChannelFutureListener.FIRE_EXCEPTION_ON_FAILURE;
 import static io.netty.handler.codec.mqtt.MqttConnectReturnCode.*;
 import static io.netty.handler.codec.mqtt.MqttMessageIdVariableHeader.from;
 import static io.netty.handler.codec.mqtt.MqttQoS.*;
+import io.netty.util.ReferenceCountUtil;
 
 final class MQTTConnection {
 
@@ -375,8 +376,6 @@ final class MQTTConnection {
             }
             case EXACTLY_ONCE: {
                 bindedSession.receivedPublishQos2(messageID, msg);
-                // Second pass-on, retain
-                msg.payload().retain();
                 postOffice.receivedPublishQos2(this, msg, username);
                 break;
             }
@@ -419,18 +418,21 @@ final class MQTTConnection {
             LOG.debug("OUT {}", msg.fixedHeader().messageType());
         }
         if (channel.isWritable()) {
+
+            // Sending to external, retain a duplicate. Just retain is not
+            // enough, since the receiver must have full control.
+            Object retainedDup = msg;
+            if (msg instanceof ByteBufHolder) {
+                retainedDup = ((ByteBufHolder) msg).retainedDuplicate();
+            }
+
             ChannelFuture channelFuture;
             if (brokerConfig.isImmediateBufferFlush()) {
-                channelFuture = channel.writeAndFlush(msg);
+                channelFuture = channel.writeAndFlush(retainedDup);
             } else {
-                channelFuture = channel.write(msg);
+                channelFuture = channel.write(retainedDup);
             }
             channelFuture.addListener(FIRE_EXCEPTION_ON_FAILURE);
-        } else {
-            // msg not passed on, release.
-            if (msg instanceof ByteBufHolder) {
-                ((ByteBufHolder) msg).release();
-            }
         }
     }
 
